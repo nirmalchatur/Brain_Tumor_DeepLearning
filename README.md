@@ -12,6 +12,12 @@ The app allows authenticated users to upload MRI images and classify them into o
 
 It uses Flask for the web interface, MongoDB for user and prediction storage, and a TensorFlow model for image classification.
 
+### Screenshots
+
+![Brain Tumor Project Overview](Brain_Tumor_Project.png)
+
+![Brain Tumor Prediction Flow](project_Brain_Tumor.png)
+
 ## Included Model
 
 Only the following model file is tracked in this repository:
