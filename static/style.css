@@ -1,0 +1,575 @@
+:root {
+    --primary: #2563eb;
+    --secondary: #3b82f6;
+    --accent: #00b894;
+    --medical-green: #00b894;
+    --medical-blue: #0984e3;
+    --medical-red: #ff7675;
+    --text: #1e293b;
+    --light: #f8fafc;
+}
+
+/* Base Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #f0f9ff 0%, #f0fff4 100%);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Hospital-themed pulse animation for important elements */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.05); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Hospital icon animation */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Layout Styles */
+.main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Animated medical icons in background */
+.main-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none" stroke="%23e2f3f8" stroke-width="2"><path d="M30,20 L70,20 L80,30 L80,70 L70,80 L30,80 L20,70 L20,30 Z M50,35 L50,65 M35,50 L65,50"/></svg>');
+    opacity: 0.05;
+    z-index: -1;
+    animation: float 6s ease-in-out infinite;
+}
+
+.box {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 800px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0,104,255,0.15);
+}
+
+/* Medical ribbon decoration */
+.box::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    background-color: var(--medical-red);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+    opacity: 0.8;
+}
+
+/* Typography */
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, var(--medical-blue), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+    position: relative;
+    display: inline-block;
+}
+
+h1::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--medical-blue), var(--medical-green));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+h1:hover::after {
+    transform: scaleX(1);
+}
+
+.subtext {
+    font-size: 1.1rem;
+    color: #64748b;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* Form Elements */
+.upload-form {
+    position: relative;
+    margin: 2rem 0;
+}
+
+.upload-form input[type="file"] {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    position: absolute;
+}
+
+.upload-form label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--medical-blue);
+    color: var(--light);
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 auto;
+    width: fit-content;
+    box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-form label::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0) 60%
+    );
+    transform: rotate(30deg);
+    transition: all 0.5s ease;
+}
+
+.upload-form label:hover {
+    background: var(--primary);
+    transform: scale(1.05);
+    animation: pulse 1.5s infinite;
+}
+
+.upload-form label:hover::before {
+    left: 100%;
+    top: 100%;
+}
+
+.upload-form button {
+    background: var(--medical-green);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    width: 100%;
+    max-width: 200px;
+    box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+}
+
+.upload-form button:hover {
+    background: #009d7a;
+    transform: scale(1.05);
+    animation: heartbeat 1s ease;
+}
+
+/* Results Section */
+.result {
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.prediction-text {
+    font-size: 1.5rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: rgba(37, 99, 235, 0.1);
+    border-left: 5px solid var(--medical-blue);
+    transition: all 0.3s ease;
+}
+
+.prediction-text:hover {
+    transform: translateX(5px);
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.1);
+}
+
+.confidence-meter {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 1rem auto;
+    max-width: 300px;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--medical-green), #00cec9);
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.confidence-fill::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.8) 0%,
+        rgba(255, 255, 255, 0) 50%,
+        rgba(255, 255, 255, 0.8) 100%
+    );
+    animation: shine 2s infinite;
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Image Grid */
+.image-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.image-box {
+    position: relative;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.image-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.image-box img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    transition: transform 0.5s ease, filter 0.3s ease;
+}
+
+.image-box:hover img {
+    transform: scale(1.1);
+    filter: brightness(1.05);
+}
+
+.image-box h4 {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    margin: 0;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.image-box:hover h4 {
+    transform: translateY(0);
+}
+
+/* User Bar */
+.username-bar {
+    position: fixed;
+    top: 1rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+    transition: all 0.3s ease;
+}
+
+.username-bar:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.username-bar span {
+    color: var(--medical-blue);
+    font-weight: 500;
+}
+/* Accuracy Visualization Styles - Properly Structured */
+.accuracy-section {
+    margin: 2.5rem 0;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.accuracy-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+    position: relative;
+    padding-left: 1rem;
+}
+
+.accuracy-section h3::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: 4px;
+    background: linear-gradient(to bottom, var(--primary), var(--secondary));
+    border-radius: 2px;
+}
+
+.accuracy-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.accuracy-card {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.accuracy-card.active-model {
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.accuracy-card .model-name {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.accuracy-card .model-name::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--secondary);
+}
+
+.accuracy-card.active-model .model-name::before {
+    background: var(--primary);
+}
+
+.accuracy-bar-container {
+    width: 100%;
+    height: 28px;
+    background: #f1f5f9;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.accuracy-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #00b894, #2563eb);
+    border-radius: 14px;
+    position: relative;
+    transition: width 1s ease-out;
+}
+
+.accuracy-value {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.model-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .accuracy-section {
+        padding: 1.25rem;
+    }
+    
+    .accuracy-card {
+        padding: 1rem;
+    }
+}
+.model-name {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.model-name::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--secondary);
+}
+
+
+.model-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .accuracy-section {
+        padding: 1.25rem;
+    }
+    
+    .accuracy-card {
+        padding: 1rem;
+    }
+}
+.username-bar button {
+    background: none;
+    border: none;
+    color: var(--medical-red);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.username-bar button:hover {
+    background: rgba(239, 68, 68, 0.1);
+    animation: pulse 0.5s ease;
+}
+
+/* Loading animation for medical processing */
+@keyframes medicalLoading {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-medical {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 184, 148, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--medical-green);
+    animation: medicalLoading 1s ease-in-out infinite;
+    margin-left: 10px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .box {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .upload-form button {
+        max-width: 100%;
+    }
+    
+    .username-bar {
+        top: auto;
+        bottom: 1rem;
+        right: 50%;
+        transform: translateX(50%);
+        width: 90%;
+        justify-content: center;
+    }
+}
+
+/* Emergency flash for critical notifications */
+@keyframes emergencyFlash {
+    0% { background-color: rgba(255, 118, 117, 0.1); }
+    50% { background-color: rgba(255, 118, 117, 0.4); }
+    100% { background-color: rgba(255, 118, 117, 0.1); }
+}
+
+.emergency-alert {
+    animation: emergencyFlash 2s infinite;
+}

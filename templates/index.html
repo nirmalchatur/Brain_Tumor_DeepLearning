@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrainSight — Brain Tumor Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        :root {
+            --blue-600: #1a56db;
+            --blue-700: #1e40af;
+            --blue-50: #eff6ff;
+            --blue-100: #dbeafe;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --green-600: #059669;
+            --green-50: #ecfdf5;
+            --green-100: #d1fae5;
+            --amber-600: #d97706;
+            --amber-50: #fffbeb;
+            --amber-100: #fef3c7;
+            --red-600: #dc2626;
+            --red-50: #fef2f2;
+            --red-100: #fee2e2;
+            --purple-600: #7c3aed;
+            --purple-50: #f5f3ff;
+            --pink-600: #db2777;
+            --pink-50: #fdf2f8;
+            --radius: 8px;
+            --sidebar-w: 260px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--gray-800);
+            background: var(--gray-50);
+            line-height: 1.5;
+            display: flex;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── Sidebar ─── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--gray-900);
+            color: #fff;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.25rem 1.25rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .sidebar-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            background: var(--blue-600);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand-text { font-weight: 700; font-size: 0.9375rem; line-height: 1.2; }
+        .sidebar-brand-sub { font-size: 0.6875rem; color: var(--gray-400); margin-top: 1px; }
+
+        .sidebar-nav { flex: 1; padding: 0.75rem; overflow-y: auto; }
+
+        .nav-section-label {
+            font-size: 0.625rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--gray-500); padding: 0.75rem 0.75rem 0.375rem;
+        }
+
+        .nav-link {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.5625rem 0.75rem; border-radius: 6px;
+            color: var(--gray-400); text-decoration: none;
+            font-size: 0.8125rem; font-weight: 500;
+            transition: background 0.15s, color 0.15s; cursor: pointer;
+        }
+
+        .nav-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .nav-link.active { background: rgba(255,255,255,0.1); color: #fff; font-weight: 600; }
+        .nav-link i { width: 18px; text-align: center; font-size: 0.875rem; }
+
+        .sidebar-user {
+            padding: 0.75rem 1rem; border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; gap: 0.625rem;
+        }
+
+        .sidebar-avatar {
+            width: 30px; height: 30px; border-radius: 50%; background: var(--blue-600);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.6875rem; font-weight: 600; color: #fff; flex-shrink: 0;
+        }
+
+        .sidebar-user-name { font-size: 0.8125rem; font-weight: 600; }
+        .sidebar-user-role { font-size: 0.6875rem; color: var(--gray-500); }
+
+        /* ─── Main ─── */
+        .main { flex: 1; margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* ─── Top bar ─── */
+        .topbar {
+            position: sticky; top: 0; z-index: 90; background: #fff;
+            border-bottom: 1px solid var(--gray-200); padding: 0 1.5rem;
+            height: 56px; display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+        .topbar-title { font-size: 0.9375rem; font-weight: 700; color: var(--gray-900); }
+
+        .mobile-menu-btn {
+            display: none; background: none; border: none;
+            color: var(--gray-600); font-size: 1.125rem; cursor: pointer; padding: 0.25rem;
+        }
+
+        .topbar-right { display: flex; align-items: center; gap: 0.25rem; }
+
+        .topbar-btn {
+            width: 36px; height: 36px; border-radius: 6px; background: none; border: none;
+            color: var(--gray-500); cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 0.9375rem; transition: background 0.15s, color 0.15s; position: relative;
+        }
+
+        .topbar-btn:hover { background: var(--gray-100); color: var(--gray-700); }
+        .topbar-dot { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--red-600); }
+
+        /* ─── Content ─── */
+        .content { flex: 1; padding: 1.5rem; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+        /* ─── Section card ─── */
+        .section {
+            background: #fff; border: 1px solid var(--gray-200);
+            border-radius: var(--radius); margin-bottom: 1.5rem;
+        }
+
+        .section-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-100);
+            flex-wrap: wrap; gap: 0.75rem;
+        }
+
+        .section-head-left { display: flex; align-items: center; gap: 0.75rem; }
+
+        .section-icon {
+            width: 36px; height: 36px; border-radius: var(--radius);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9375rem; color: #fff; flex-shrink: 0;
+        }
+
+        .section-icon.blue { background: var(--blue-600); }
+        .section-icon.purple { background: var(--purple-600); }
+        .section-icon.pink { background: var(--pink-600); }
+
+        .section-title { font-size: 0.9375rem; font-weight: 700; color: var(--gray-900); }
+        .section-subtitle { font-size: 0.75rem; color: var(--gray-500); margin-top: 1px; }
+        .section-body { padding: 1.25rem; }
+
+        /* ─── Model selection ─── */
+        .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+
+        .model-card {
+            border: 2px solid var(--gray-200); border-radius: var(--radius);
+            padding: 1rem; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+        }
+
+        .model-card:hover { border-color: var(--gray-300); }
+        .model-card.selected { border-color: var(--blue-600); background: var(--blue-50); }
+        .model-card-name { font-size: 0.8125rem; font-weight: 600; color: var(--gray-800); margin-bottom: 0.25rem; }
+        .model-card-desc { font-size: 0.75rem; color: var(--gray-500); line-height: 1.4; margin-bottom: 0.75rem; }
+        .model-card-acc { font-size: 0.75rem; font-weight: 600; color: var(--blue-600); }
+
+        /* ─── Upload ─── */
+        .upload-area {
+            border: 2px dashed var(--gray-300); border-radius: var(--radius);
+            padding: 2.5rem 1.5rem; text-align: center;
+            transition: border-color 0.15s, background 0.15s; cursor: pointer; position: relative;
+        }
+
+        .upload-area:hover { border-color: var(--gray-400); }
+        .upload-area.dragover { border-color: var(--blue-600); background: var(--blue-50); }
+
+        .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .upload-icon { font-size: 1.75rem; color: var(--gray-400); margin-bottom: 0.75rem; }
+        .upload-title { font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.25rem; }
+        .upload-hint { font-size: 0.75rem; color: var(--gray-400); }
+
+        .upload-formats { display: flex; justify-content: center; gap: 0.375rem; margin-top: 0.75rem; flex-wrap: wrap; }
+
+        .upload-format {
+            font-size: 0.625rem; font-weight: 600; color: var(--gray-500);
+            background: var(--gray-100); padding: 0.1875rem 0.5rem; border-radius: 4px; text-transform: uppercase;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            font-family: inherit; font-size: 0.8125rem; font-weight: 600;
+            padding: 0.5625rem 1.25rem; border-radius: 6px; border: 1px solid transparent;
+            cursor: pointer; transition: background 0.15s, border-color 0.15s; line-height: 1.25; white-space: nowrap;
+        }
+
+        .btn:focus-visible { outline: 2px solid var(--blue-600); outline-offset: 1px; }
+
+        .btn-primary { background: var(--blue-600); color: #fff; border-color: var(--blue-600); }
+        .btn-primary:hover { background: var(--blue-700); border-color: var(--blue-700); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-secondary { background: #fff; color: var(--gray-700); border-color: var(--gray-300); }
+        .btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-400); }
+
+        .btn-danger { background: var(--red-600); color: #fff; border-color: var(--red-600); }
+        .btn-danger:hover { background: #b91c1c; }
+
+        .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+        .btn .spinner {
+            width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff; border-radius: 50%; animation: spin 0.4s linear infinite; display: none;
+        }
+        .btn.loading .spinner { display: block; }
+        .btn.loading .btn-label { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .upload-actions { margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; }
+
+        /* ─── File preview ─── */
+        .file-preview {
+            display: none; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1rem; background: var(--gray-50);
+            border: 1px solid var(--gray-200); border-radius: var(--radius); margin-top: 1rem;
+        }
+
+        .file-preview.visible { display: flex; }
+        .file-preview-thumb { width: 48px; height: 48px; border-radius: 4px; background: var(--gray-200); overflow: hidden; flex-shrink: 0; }
+        .file-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .file-preview-info { flex: 1; min-width: 0; }
+        .file-preview-name { font-size: 0.8125rem; font-weight: 600; color: var(--gray-800); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-preview-size { font-size: 0.6875rem; color: var(--gray-500); }
+
+        .file-preview-remove {
+            background: none; border: none; color: var(--gray-400);
+            cursor: pointer; padding: 0.25rem; font-size: 0.875rem; transition: color 0.15s;
+        }
+        .file-preview-remove:hover { color: var(--red-600); }
+
+        /* ─── Results ─── */
+        .results-area { display: none; }
+        .results-area.visible { display: block; }
+
+        .result-banner {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1rem 1.25rem; border-radius: var(--radius); margin-bottom: 1.25rem; border: 1px solid;
+        }
+
+        .result-banner.negative { background: var(--green-50); border-color: var(--green-100); }
+        .result-banner.positive { background: var(--red-50); border-color: var(--red-100); }
+
+        .result-banner-icon {
+            width: 40px; height: 40px; border-radius: var(--radius);
+            display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; flex-shrink: 0;
+        }
+
+        .result-banner.negative .result-banner-icon { background: var(--green-600); }
+        .result-banner.positive .result-banner-icon { background: var(--red-600); }
+        .result-banner-text { flex: 1; }
+        .result-banner-title { font-size: 0.875rem; font-weight: 700; color: var(--gray-900); }
+        .result-banner-desc { font-size: 0.75rem; color: var(--gray-500); margin-top: 1px; }
+
+        /* Type grid */
+        .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+
+        .type-card {
+            border: 1px solid var(--gray-200); border-radius: var(--radius);
+            padding: 1rem; transition: border-color 0.15s;
+        }
+
+        .type-card.highlight { border-color: var(--blue-600); background: var(--blue-50); }
+        .type-card-label { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gray-400); margin-bottom: 0.375rem; }
+        .type-card-name { font-size: 0.875rem; font-weight: 600; color: var(--gray-800); margin-bottom: 0.25rem; }
+        .type-card-bar { height: 6px; background: var(--gray-100); border-radius: 3px; overflow: hidden; margin-top: 0.5rem; }
+        .type-card-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+        /* Confidence */
+        .confidence-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .confidence-label { font-size: 0.8125rem; font-weight: 600; color: var(--gray-700); white-space: nowrap; }
+        .confidence-bar { flex: 1; height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden; }
+        .confidence-fill { height: 100%; border-radius: 4px; background: var(--blue-600); transition: width 1.2s ease; }
+        .confidence-value { font-size: 0.875rem; font-weight: 700; color: var(--blue-600); min-width: 48px; text-align: right; }
+
+        /* ─── MRI Preview ─── */
+        .mri-label {
+            position: absolute; bottom: 0.5rem; left: 0.5rem;
+            font-size: 0.625rem; font-weight: 600; color: #fff;
+            background: rgba(0,0,0,0.6); padding: 0.1875rem 0.5rem; border-radius: 4px;
+        }
+
+        /* ─── Performance table ─── */
+        .perf-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+        .perf-table thead { background: var(--gray-50); }
+        .perf-table th {
+            padding: 0.625rem 1rem; text-align: left; font-weight: 600; color: var(--gray-500);
+            font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--gray-200);
+        }
+        .perf-table td { padding: 0.625rem 1rem; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
+        .perf-table tbody tr:hover { background: var(--gray-50); }
+        .perf-table .metric { font-weight: 700; font-variant-numeric: tabular-nums; }
+        .metric-good { color: var(--green-600); }
+        .metric-warn { color: var(--amber-600); }
+
+        /* ─── Tabs ─── */
+        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--gray-200); margin-bottom: 1.25rem; }
+
+        .tab-btn {
+            padding: 0.625rem 1rem; background: none; border: none; font-family: inherit;
+            font-size: 0.8125rem; font-weight: 500; color: var(--gray-500); cursor: pointer;
+            border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; margin-bottom: -1px;
+        }
+
+        .tab-btn:hover { color: var(--gray-700); }
+        .tab-btn.active { color: var(--blue-600); border-bottom-color: var(--blue-600); font-weight: 600; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Steps */
+        .step-list { display: flex; flex-direction: column; gap: 0.625rem; }
+
+        .step-item {
+            display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem;
+            background: var(--gray-50); border-radius: 6px; border-left: 3px solid var(--purple-600);
+        }
+
+        .step-num {
+            width: 24px; height: 24px; border-radius: 50%; background: var(--purple-600);
+            color: #fff; font-size: 0.6875rem; font-weight: 700; display: flex;
+            align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+        }
+
+        .step-title { font-size: 0.8125rem; font-weight: 600; color: var(--gray-800); }
+        .step-desc { font-size: 0.75rem; color: var(--gray-500); margin-top: 2px; }
+
+        /* Follow-up */
+        .followup-list { display: flex; flex-direction: column; gap: 0.625rem; }
+
+        .followup-item {
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem;
+            background: var(--gray-50); border-radius: 6px; border-left: 3px solid var(--pink-600);
+        }
+
+        .followup-date-box {
+            width: 44px; height: 44px; border-radius: 6px; background: var(--pink-600);
+            color: #fff; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; flex-shrink: 0; line-height: 1.1;
+        }
+
+        .followup-date-day { font-size: 1rem; font-weight: 700; }
+        .followup-date-mon { font-size: 0.5625rem; font-weight: 600; text-transform: uppercase; opacity: 0.85; }
+        .followup-title { font-size: 0.8125rem; font-weight: 600; color: var(--gray-800); }
+        .followup-desc { font-size: 0.75rem; color: var(--gray-500); }
+
+        .followup-status {
+            margin-left: auto; font-size: 0.625rem; font-weight: 600;
+            padding: 0.1875rem 0.5rem; border-radius: 4px; white-space: nowrap;
+        }
+
+        .followup-status.upcoming { background: var(--amber-100); color: var(--amber-600); }
+        .followup-status.done { background: var(--green-100); color: var(--green-600); }
+
+        /* ─── Toast ─── */
+        .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; }
+
+        .toast {
+            background: var(--gray-900); color: #fff; padding: 0.625rem 1rem;
+            border-radius: 6px; font-size: 0.8125rem; font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: toastIn 0.25s ease;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        .toast.success { border-left: 3px solid var(--green-600); }
+        .toast.error { border-left: 3px solid var(--red-600); }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ─── Sidebar overlay (mobile) ─── */
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+        .sidebar-overlay.open { display: block; }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; }
+            .mobile-menu-btn { display: block; }
+            .content { padding: 1rem; }
+            .model-grid { grid-template-columns: 1fr; }
+            .type-grid { grid-template-columns: 1fr 1fr; }
+            .report-grid { grid-template-columns: 1fr !important; }
+        }
+
+        @media (max-width: 480px) { .type-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="sidebar-logo"><i class="fa-solid fa-brain"></i></div>
+        <div>
+            <div class="sidebar-brand-text">BrainSight</div>
+            <div class="sidebar-brand-sub">Tumor Detection AI</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a class="nav-link active" href="#upload-section"><i class="fa-solid fa-cloud-arrow-up"></i> Upload & Detect</a>
+        <a class="nav-link" href="#results-section"><i class="fa-solid fa-file-medical"></i> Results</a>
+        <a class="nav-link" href="#performance-section"><i class="fa-solid fa-chart-bar"></i> Model Performance</a>
+        <div class="nav-section-label">Clinical</div>
+        <a class="nav-link" href="#treatment-section"><i class="fa-solid fa-clipboard-list"></i> Treatment Plan</a>
+        <a class="nav-link" href="#"><i class="fa-solid fa-calendar-check"></i> Follow-ups</a>
+        <a class="nav-link" href="#"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+        <div class="nav-section-label">System</div>
+        <a class="nav-link" href="#"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a class="nav-link" href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a>
+    </nav>
+    <div class="sidebar-user">
+        <div class="sidebar-avatar">DR</div>
+        <div>
+            <div class="sidebar-user-name">Dr. R. Sharma</div>
+            <div class="sidebar-user-role">Neurologist</div>
+        </div>
+    </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+    <header class="topbar">
+        <div class="topbar-left">
+            <button class="mobile-menu-btn" id="menuBtn" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+            <span class="topbar-title">Dashboard</span>
+        </div>
+        <div class="topbar-right">
+            <button class="topbar-btn" aria-label="Notifications"><i class="fa-solid fa-bell"></i><span class="topbar-dot"></span></button>
+            <button class="topbar-btn" aria-label="Help"><i class="fa-solid fa-circle-question"></i></button>
+        </div>
+    </header>
+
+    <div class="content">
+
+        <!-- Upload Section -->
+        <div class="section" id="upload-section">
+            <div class="section-head">
+                <div class="section-head-left">
+                    <div class="section-icon blue"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <div>
+                        <div class="section-title">Upload MRI Scan</div>
+                        <div class="section-subtitle">Select a model, then upload an MRI image for analysis</div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-body">
+                <div style="margin-bottom:1rem;">
+                    <div style="font-size:0.75rem;font-weight:600;color:var(--gray-500);margin-bottom:0.5rem;">SELECT MODEL</div>
+                    <div class="model-grid" id="modelGrid">
+                        <div class="model-card selected" data-model="cnn" onclick="selectModel(this)">
+                            <div class="model-card-name">CNN Classifier</div>
+                            <div class="model-card-desc">Convolutional neural network trained on 7,023 labeled MRI slices.</div>
+                            <div class="model-card-acc"><i class="fa-solid fa-bullseye" style="margin-right:4px;"></i> 97.2% accuracy</div>
+                        </div>
+                        <div class="model-card" data-model="resnet" onclick="selectModel(this)">
+                            <div class="model-card-name">ResNet-50</div>
+                            <div class="model-card-desc">Deep residual network with transfer learning from ImageNet.</div>
+                            <div class="model-card-acc"><i class="fa-solid fa-bullseye" style="margin-right:4px;"></i> 98.1% accuracy</div>
+                        </div>
+                        <div class="model-card" data-model="vgg" onclick="selectModel(this)">
+                            <div class="model-card-name">VGG-19</div>
+                            <div class="model-card-desc">Deep architecture with small 3x3 convolution filters.</div>
+                            <div class="model-card-acc"><i class="fa-solid fa-bullseye" style="margin-right:4px;"></i> 96.5% accuracy</div>
+                        </div>
+                        <div class="model-card" data-model="ensemble" onclick="selectModel(this)">
+                            <div class="model-card-name">Ensemble</div>
+                            <div class="model-card-desc">Weighted average of CNN, ResNet, and VGG predictions.</div>
+                            <div class="model-card-acc"><i class="fa-solid fa-bullseye" style="margin-right:4px;"></i> 98.7% accuracy</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept="image/*">
+                    <div class="upload-icon"><i class="fa-solid fa-image"></i></div>
+                    <div class="upload-title">Drop MRI scan here or click to browse</div>
+                    <div class="upload-hint">Single image, max 10 MB</div>
+                    <div class="upload-formats">
+                        <span class="upload-format">.jpg</span>
+                        <span class="upload-format">.png</span>
+                        <span class="upload-format">.dicom</span>
+                        <span class="upload-format">.nii</span>
+                    </div>
+                </div>
+
+                <div class="file-preview" id="filePreview">
+                    <div class="file-preview-thumb" id="fileThumb"></div>
+                    <div class="file-preview-info">
+                        <div class="file-preview-name" id="fileName"></div>
+                        <div class="file-preview-size" id="fileSize"></div>
+                    </div>
+                    <button class="file-preview-remove" id="fileRemove" aria-label="Remove file"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="upload-actions">
+                    <button class="btn btn-primary" id="analyzeBtn" disabled onclick="runAnalysis()">
+                        <span class="btn-label">Run Detection</span>
+                        <span class="spinner"></span>
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn" style="display:none;" onclick="clearUpload()">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results-area" id="results-section">
+            <div class="section">
+                <div class="section-head">
+                    <div class="section-head-left">
+                        <div class="section-icon blue"><i class="fa-solid fa-file-medical"></i></div>
+                        <div>
+                            <div class="section-title">Diagnostic Report</div>
+                            <div class="section-subtitle" id="reportTimestamp"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="downloadPDF()"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+                </div>
+                <div class="section-body" id="reportBody"></div>
+            </div>
+        </div>
+
+        <!-- Performance -->
+        <div class="section" id="performance-section">
+            <div class="section-head">
+                <div class="section-head-left">
+                    <div class="section-icon purple"><i class="fa-solid fa-chart-bar"></i></div>
+                    <div>
+                        <div class="section-title">Model Performance</div>
+                        <div class="section-subtitle">Evaluated on 1,500 test images across 4 classes</div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-body" style="padding:0;">
+                <div style="overflow-x:auto;">
+                    <table class="perf-table">
+                        <thead>
+                            <tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1 Score</th><th>Inference</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="font-weight:600;">CNN Classifier</td><td class="metric metric-good">97.2%</td><td class="metric metric-good">96.8%</td><td class="metric metric-good">97.1%</td><td class="metric metric-good">96.9%</td><td>42 ms</td></tr>
+                            <tr><td style="font-weight:600;">ResNet-50</td><td class="metric metric-good">98.1%</td><td class="metric metric-good">97.9%</td><td class="metric metric-good">98.0%</td><td class="metric metric-good">97.9%</td><td>68 ms</td></tr>
+                            <tr><td style="font-weight:600;">VGG-19</td><td class="metric metric-good">96.5%</td><td class="metric metric-warn">95.8%</td><td class="metric metric-good">96.3%</td><td class="metric metric-good">96.0%</td><td>95 ms</td></tr>
+                            <tr><td style="font-weight:600;">Ensemble</td><td class="metric metric-good">98.7%</td><td class="metric metric-good">98.5%</td><td class="metric metric-good">98.6%</td><td class="metric metric-good">98.5%</td><td>185 ms</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="padding:1.25rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;">
+                    <div style="padding:1rem;background:var(--green-50);border-radius:6px;border-left:3px solid var(--green-600);">
+                        <div style="font-size:0.6875rem;font-weight:600;color:var(--green-600);text-transform:uppercase;letter-spacing:0.04em;">Best Accuracy</div>
+                        <div style="font-size:1.25rem;font-weight:700;color:var(--green-600);margin-top:0.25rem;">98.7%</div>
+                        <div style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">Ensemble model</div>
+                    </div>
+                    <div style="padding:1rem;background:var(--blue-50);border-radius:6px;border-left:3px solid var(--blue-600);">
+                        <div style="font-size:0.6875rem;font-weight:600;color:var(--blue-600);text-transform:uppercase;letter-spacing:0.04em;">Fastest</div>
+                        <div style="font-size:1.25rem;font-weight:700;color:var(--blue-600);margin-top:0.25rem;">42 ms</div>
+                        <div style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">CNN Classifier</div>
+                    </div>
+                    <div style="padding:1rem;background:var(--amber-50);border-radius:6px;border-left:3px solid var(--amber-600);">
+                        <div style="font-size:0.6875rem;font-weight:600;color:var(--amber-600);text-transform:uppercase;letter-spacing:0.04em;">Lowest Recall</div>
+                        <div style="font-size:1.25rem;font-weight:700;color:var(--amber-600);margin-top:0.25rem;">96.3%</div>
+                        <div style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">VGG-19</div>
+                    </div>
+                    <div style="padding:1rem;background:var(--purple-50);border-radius:6px;border-left:3px solid var(--purple-600);">
+                        <div style="font-size:0.6875rem;font-weight:600;color:var(--purple-600);text-transform:uppercase;letter-spacing:0.04em;">Dataset Size</div>
+                        <div style="font-size:1.25rem;font-weight:700;color:var(--purple-600);margin-top:0.25rem;">7,023</div>
+                        <div style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">Labeled MRI slices</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Treatment -->
+        <div class="section" id="treatment-section">
+            <div class="section-head">
+                <div class="section-head-left">
+                    <div class="section-icon pink"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div>
+                        <div class="section-title">Treatment & Follow-up</div>
+                        <div class="section-subtitle">Sample clinical workflow — populated after positive detection</div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="treatment" onclick="switchTab(this)">Treatment Plan</button>
+                    <button class="tab-btn" data-tab="followup" onclick="switchTab(this)">Follow-up Schedule</button>
+                </div>
+
+                <div class="tab-panel active" id="tab-treatment">
+                    <div style="padding:1rem;background:var(--purple-50);border:1px solid var(--purple-50);border-radius:6px;margin-bottom:1.25rem;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+                            <div>
+                                <div style="font-size:0.8125rem;font-weight:600;color:var(--purple-600);">Active Treatment Plan</div>
+                                <div style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">Patient ID: BT-2025-0042</div>
+                            </div>
+                            <span style="font-size:0.6875rem;font-weight:600;padding:0.1875rem 0.5rem;background:var(--green-100);color:var(--green-600);border-radius:4px;">Active</span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.75rem;margin-top:1rem;">
+                            <div><div style="font-size:0.6875rem;color:var(--gray-500);">Oncologist</div><div style="font-size:0.8125rem;font-weight:600;color:var(--gray-800);">Dr. A. Mehta</div></div>
+                            <div><div style="font-size:0.6875rem;color:var(--gray-500);">Started</div><div style="font-size:0.8125rem;font-weight:600;color:var(--gray-800);">Jan 15, 2025</div></div>
+                            <div><div style="font-size:0.6875rem;color:var(--gray-500);">Duration</div><div style="font-size:0.8125rem;font-weight:600;color:var(--gray-800);">6 weeks</div></div>
+                            <div><div style="font-size:0.6875rem;color:var(--gray-500);">Tumor Type</div><div style="font-size:0.8125rem;font-weight:600;color:var(--gray-800);">Meningioma</div></div>
+                        </div>
+                    </div>
+                    <div class="step-list">
+                        <div class="step-item"><div class="step-num">1</div><div><div class="step-title">Surgical Consultation</div><div class="step-desc">Pre-operative assessment and imaging review with neurosurgery team.</div></div></div>
+                        <div class="step-item"><div class="step-num">2</div><div><div class="step-title">Craniotomy & Resection</div><div class="step-desc">Microsurgical tumor removal under general anesthesia, guided by intraoperative MRI.</div></div></div>
+                        <div class="step-item"><div class="step-num">3</div><div><div class="step-title">Histopathological Analysis</div><div class="step-desc">Tissue sample analysis to confirm tumor grade (WHO Grade I-III).</div></div></div>
+                        <div class="step-item"><div class="step-num">4</div><div><div class="step-title">Adjuvant Radiotherapy</div><div class="step-desc">Fractionated stereotactic radiotherapy, 28 sessions over 6 weeks.</div></div></div>
+                        <div class="step-item"><div class="step-num">5</div><div><div class="step-title">Post-treatment MRI Surveillance</div><div class="step-desc">Follow-up scans at 3, 6, and 12 months to monitor for recurrence.</div></div></div>
+                    </div>
+                </div>
+
+                <div class="tab-panel" id="tab-followup">
+                    <div class="followup-list">
+                        <div class="followup-item">
+                            <div class="followup-date-box"><span class="followup-date-day">15</span><span class="followup-date-mon">Mar</span></div>
+                            <div><div class="followup-title">Post-Op MRI Check</div><div class="followup-desc">Verify complete resection, baseline for future comparison.</div></div>
+                            <span class="followup-status done">Completed</span>
+                        </div>
+                        <div class="followup-item">
+                            <div class="followup-date-box"><span class="followup-date-day">15</span><span class="followup-date-mon">Jun</span></div>
+                            <div><div class="followup-title">3-Month Follow-up</div><div class="followup-desc">Contrast-enhanced MRI to check for early recurrence.</div></div>
+                            <span class="followup-status done">Completed</span>
+                        </div>
+                        <div class="followup-item">
+                            <div class="followup-date-box"><span class="followup-date-day">15</span><span class="followup-date-mon">Sep</span></div>
+                            <div><div class="followup-title">6-Month Follow-up</div><div class="followup-desc">Full neurological exam + MRI. Discuss radiotherapy outcomes.</div></div>
+                            <span class="followup-status upcoming">Upcoming</span>
+                        </div>
+                        <div class="followup-item">
+                            <div class="followup-date-box"><span class="followup-date-day">15</span><span class="followup-date-mon">Mar</span></div>
+                            <div><div class="followup-title">12-Month Follow-up</div><div class="followup-desc">Annual surveillance scan and clinical assessment.</div></div>
+                            <span class="followup-status upcoming">Upcoming</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    let selectedModel = 'cnn';
+    let selectedFile = null;
+
+    // Sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    document.getElementById('menuBtn').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('open'); });
+    overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => { if (window.innerWidth <= 768) { sidebar.classList.remove('open'); overlay.classList.remove('open'); } });
+    });
+
+    // Active nav on scroll
+    const sectionEls = document.querySelectorAll('.section, .results-area');
+    const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sectionEls.forEach(sec => { if (sec.getBoundingClientRect().top <= 100) current = sec.id; });
+        navLinks.forEach(link => { link.classList.toggle('active', link.getAttribute('href') === '#' + current); });
+    });
+
+    // Model selection
+    function selectModel(card) {
+        document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        selectedModel = card.dataset.model;
+    }
+
+    // File upload
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+    function handleFile(file) {
+        if (!file.type.startsWith('image/') && !file.name.match(/\.(dicom|nii)$/i)) { showToast('Please upload a valid image or DICOM file.', 'error'); return; }
+        if (file.size > 10 * 1024 * 1024) { showToast('File exceeds 10 MB limit.', 'error'); return; }
+        selectedFile = file;
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatSize(file.size);
+        const thumb = document.getElementById('fileThumb');
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = e => { thumb.innerHTML = '<img src="' + e.target.result + '" alt="Preview">'; };
+            reader.readAsDataURL(file);
+        } else {
+            thumb.innerHTML = '<i class="fa-solid fa-file-medical" style="color:var(--gray-400);display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:1.25rem;"></i>';
+        }
+        filePreview.classList.add('visible');
+        uploadArea.style.display = 'none';
+        analyzeBtn.disabled = false;
+        clearBtn.style.display = '';
+    }
+
+    document.getElementById('fileRemove').addEventListener('click', clearUpload);
+
+    function clearUpload() {
+        selectedFile = null; fileInput.value = ''; filePreview.classList.remove('visible');
+        uploadArea.style.display = ''; analyzeBtn.disabled = true; clearBtn.style.display = 'none';
+        document.getElementById('results-section').classList.remove('visible');
+    }
+
+    function formatSize(b) { if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; return (b / 1048576).toFixed(1) + ' MB'; }
+
+    // Simulated analysis
+    function runAnalysis() {
+        if (!selectedFile) return;
+        analyzeBtn.classList.add('loading'); analyzeBtn.disabled = true;
+        setTimeout(() => {
+            analyzeBtn.classList.remove('loading'); analyzeBtn.disabled = false;
+            const isPositive = Math.random() > 0.3;
+            const types = [
+                { name: 'Meningioma', desc: 'Typically benign tumor arising from meninges. Most common extra-axial intracranial tumor.', color: 'var(--purple-600)' },
+                { name: 'Glioma', desc: 'Tumor originating from glial cells. Ranges from low-grade to highly aggressive glioblastoma.', color: 'var(--amber-600)' },
+                { name: 'Pituitary Adenoma', desc: 'Usually benign tumor of the pituitary gland. May affect hormone production.', color: 'var(--pink-600)' },
+                { name: 'No Tumor Detected', desc: 'No abnormal mass or lesion identified in the scanned region.', color: 'var(--green-600)' }
+            ];
+            let r;
+            if (isPositive) {
+                const t = types[Math.floor(Math.random() * 3)];
+                const c = (85 + Math.random() * 13).toFixed(1);
+                const oth = types.filter(x => x !== t);
+                r = { positive: true, type: t.name, typeDesc: t.desc, typeColor: t.color, confidence: c,
+                    classifications: [{ ...t, prob: parseFloat(c) }, { ...oth[0], prob: parseFloat((100 - c - Math.random() * 5).toFixed(1)) }, { ...oth[1], prob: parseFloat((Math.random() * 5).toFixed(1)) }, { ...oth[2], prob: parseFloat((Math.random() * 2).toFixed(1)) }].sort((a, b) => b.prob - a.prob) };
+            } else {
+                const nt = types[3]; const c = (90 + Math.random() * 9).toFixed(1);
+                r = { positive: false, type: 'No Tumor Detected', typeDesc: nt.desc, typeColor: nt.color, confidence: c,
+                    classifications: [{ ...nt, prob: parseFloat(c) }, { ...types[0], prob: parseFloat((100 - c - Math.random() * 3).toFixed(1)) }, { ...types[1], prob: parseFloat((Math.random() * 3).toFixed(1)) }, { ...types[2], prob: parseFloat((Math.random() * 2).toFixed(1)) }].sort((a, b) => b.prob - a.prob) };
+            }
+            renderResults(r); showToast('Detection complete.', 'success');
+            setTimeout(() => document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        }, 1800);
+    }
+
+    function renderResults(r) {
+        const now = new Date();
+        document.getElementById('reportTimestamp').textContent = 'Generated ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' \u2014 Model: ' + selectedModel.toUpperCase();
+        const thumbSrc = document.getElementById('fileThumb').querySelector('img')?.src || '';
+        document.getElementById('reportBody').innerHTML =
+            '<div class="result-banner ' + (r.positive ? 'positive' : 'negative') + '">' +
+                '<div class="result-banner-icon"><i class="fa-solid ' + (r.positive ? 'fa-triangle-exclamation' : 'fa-circle-check') + '"></i></div>' +
+                '<div class="result-banner-text"><div class="result-banner-title">' + (r.positive ? 'Tumor Detected' : 'No Tumor Detected') + '</div>' +
+                '<div class="result-banner-desc">' + (r.positive ? 'Abnormal mass identified in the scanned region. Clinical correlation recommended.' : 'No abnormal mass or lesion identified in the scanned region.') + '</div></div></div>' +
+            '<div class="report-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;">' +
+                (thumbSrc ? '<div style="background:var(--gray-900);border-radius:var(--radius);overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;"><img src="' + thumbSrc + '" style="width:100%;height:100%;object-fit:cover;opacity:0.85;" alt="MRI Scan"><span class="mri-label">Uploaded Scan</span></div>' : '') +
+                '<div><div style="font-size:0.75rem;font-weight:600;color:var(--gray-500);margin-bottom:0.5rem;">CLASSIFICATION PROBABILITIES</div><div class="type-grid" style="margin-bottom:0;">' +
+                r.classifications.map(c => '<div class="type-card ' + (c.name === r.type ? 'highlight' : '') + '"><div class="type-card-label">' + (c.name === r.type ? 'Predicted' : 'Alternative') + '</div><div class="type-card-name">' + c.name + '</div><div class="type-card-bar"><div class="type-card-fill" style="width:' + c.prob + '%;background:' + (c.color || 'var(--blue-600)') + ';"></div></div><div style="font-size:0.75rem;font-weight:700;color:' + (c.color || 'var(--blue-600)') + ';margin-top:0.25rem;">' + c.prob + '%</div></div>').join('') +
+                '</div></div></div>' +
+            '<div style="margin-bottom:1.5rem;"><div style="font-size:0.75rem;font-weight:600;color:var(--gray-500);margin-bottom:0.5rem;">CONFIDENCE SCORE</div><div class="confidence-row"><div class="confidence-label">Model Confidence</div><div class="confidence-bar"><div class="confidence-fill" id="confBar" style="width:0%;"></div></div><div class="confidence-value">' + r.confidence + '%</div></div></div>' +
+            '<div style="padding:1rem;background:var(--gray-50);border-radius:6px;border-left:3px solid ' + r.typeColor + ';"><div style="font-size:0.8125rem;font-weight:600;color:var(--gray-800);margin-bottom:0.25rem;">' + r.type + '</div><div style="font-size:0.8125rem;color:var(--gray-500);line-height:1.5;">' + r.typeDesc + '</div></div>' +
+            '<div style="margin-top:1rem;padding:0.75rem;background:var(--amber-50);border:1px solid var(--amber-100);border-radius:6px;font-size:0.75rem;color:var(--amber-600);"><i class="fa-solid fa-circle-info" style="margin-right:4px;"></i> This is an AI-assisted analysis and should not be used as the sole basis for clinical decisions. Always consult with a qualified neurologist or neurosurgeon.</div>';
+
+        document.getElementById('results-section').classList.add('visible');
+        requestAnimationFrame(() => { requestAnimationFrame(() => { const bar = document.getElementById('confBar'); if (bar) bar.style.width = r.confidence + '%'; }); });
+    }
+
+    // Tabs
+    function switchTab(btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    }
+
+    // Toast
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.className = 'toast ' + type;
+        t.innerHTML = '<i class="fa-solid ' + (type === 'success' ? 'fa-circle-check' : 'fa-circle-xmark') + '"></i> ' + msg;
+        document.getElementById('toastContainer').appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.25s'; setTimeout(() => t.remove(), 250); }, 3000);
+    }
+
+    // PDF
+    async function downloadPDF() {
+        showToast('Generating PDF...', 'success');
+        try {
+            const canvas = await html2canvas(document.getElementById('reportBody'), { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const w = pdf.internal.pageSize.getWidth();
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, (canvas.height * w) / canvas.width);
+            pdf.save('brainsight-report.pdf');
+            showToast('PDF downloaded.', 'success');
+        } catch (e) { showToast('PDF generation failed.', 'error'); }
+    }
+</script>
+</body>
+</html>
