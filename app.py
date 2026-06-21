@@ -28,7 +28,7 @@ app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 
 # MongoDB Setup
 try:
-    client = MongoClient('mongodb+srv://nirmal123456:12345abcdA@cluster0.dk3h6.mongodb.net/podcast', 
+    client = MongoClient(MONGO_DB_URL, 
                         connectTimeoutMS=30000, socketTimeoutMS=None)
     db = client['podcast']
     users_collection = db['users']
