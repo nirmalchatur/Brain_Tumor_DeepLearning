@@ -2,6 +2,7 @@
 
 This repository contains a Flask-based web application for brain tumor classification using deep learning.
 <img width="690" height="625" alt="architecture" src="https://github.com/user-attachments/assets/65e0362b-178a-48fe-8871-606b3fcccd0a" />
+<img width="857" height="517" alt="Model_train" src="https://github.com/user-attachments/assets/dffbc607-f69d-446e-8ef9-d6d97ca2d712" />
 
 ## Project Overview
 
