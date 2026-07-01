@@ -1,6 +1,7 @@
 # Brain Tumor Detection Web App
 
 This repository contains a Flask-based web application for brain tumor classification using deep learning.
+<img width="690" height="625" alt="architecture" src="https://github.com/user-attachments/assets/65e0362b-178a-48fe-8871-606b3fcccd0a" />
 
 ## Project Overview
 
