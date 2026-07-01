@@ -13,7 +13,7 @@ The app allows authenticated users to upload MRI images and classify them into o
 - Pituitary
 
 It uses Flask for the web interface, MongoDB for user and prediction storage, and a TensorFlow model for image classification.
-
+Deployment Link --> https://nirmalchatur-brain-tumour-stream-z3pi7y.streamlit.app/
 ### Screenshots
 
 ![Brain Tumor Project Overview](Brain_Tumor_Project.png)
